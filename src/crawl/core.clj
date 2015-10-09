@@ -6,17 +6,18 @@
 (def lawyers-url "https://lawyers.law.cornell.edu/lawyers/injury-accident-law/")
 (def lawyer-profile-url "https://lawyers.law.cornell.edu")
 
-(def states ["alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
-             "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
-             "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
-              "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
-              "Missouri", "Montana", "Nebraska", "Nevada", "New-Hampshire",
-              "New-Jersey", "New Mexico", "New-York", "North-Carolina",
-              "North-Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-             "Rhode-Island", "South-Carolina", "South-Dakota", "Tennessee",
-             "Texas", "Utah", "vermont", "Virginia", "West-Virginia", "Wisconsin", "Wyoming", "washington"])
+(def states ["alabama", "alaska", "arizona", "arkansas", "california", "colorado",
+             "connecticut", "delaware", "florida", "georgia", "hawaii", "idaho",
+             "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana",
+              "maine", "maryland", "massachusetts", "michigan", "minnesota", "mississippi",
+              "missouri", "montana", "nebraska", "nevada", "new-hampshire",
+              "new-jersey", "new-mexico", "new-york", "north-carolina",
+              "north-dakota", "ohio", "oklahoma", "oregon", "pennsylvania",
+             "rhode-island", "south-carolina", "south-dakota", "tennessee",
+             "texas", "utah", "vermont", "virginia", "west-virginia", "wisconsin", "wyoming", "washington"])
 
-; (def states ["arizona"]) ;; DEBUG
+;(def states ["arizona"]) ;; DEBUG
+;(def states ["missouri", "montana", "nebraska"]) ;; DEBUG
 
 (def OUTPUT-FILE "output.txt")
 
@@ -91,32 +92,35 @@
   []
   (spit OUTPUT-FILE "") ;; truncate file for new crawl
   (doseq [state states] ;; for each state we want to look at
-    (println "Crawling " state "...")
-    (spit OUTPUT-FILE (str "-----STATE: " state "-------\n\n") :append true)
+    (try
+      (println "Crawling " state "...")
+      (spit OUTPUT-FILE (str "-----STATE: " state "-------\n\n") :append true)
 
-    (loop [pagenum 1
-           full-page (grab-resource state pagenum)]
+      (loop [pagenum 1
+             full-page (grab-resource state pagenum)]
 
-      (let [lawyer-divs (html/select-nodes* full-page [:div.l_item])]
+        (let [lawyer-divs (html/select-nodes* full-page [:div.l_item])]
 
 
-        ;; grab info from each lawyer div
+          ;; grab info from each lawyer div
 
-        (doseq [cur-div lawyer-divs] ;; for each lawyer profile in the current page
-          ;; extract data from div
-          (let [new-url (get-in (first (html/select cur-div [:a.url])) [:attrs :href])]
+          (doseq [cur-div lawyer-divs] ;; for each lawyer profile in the current page
+            ;; extract data from div
+            (let [new-url (get-in (first (html/select cur-div [:a.url])) [:attrs :href])]
 
-             (swap! pages-for-second-pass-atom conj new-url)))
+               (swap! pages-for-second-pass-atom conj new-url)))
 
-        ;; are we on the last page of this state's results?
+          ;; are we on the last page of this state's results?
 
-        (if (last-page? full-page)
-          (do
-            (println (str "Finished with " state))
-            (println "Set Size: " (count @pages-for-second-pass-atom))
-            (doall (map detail-page @pages-for-second-pass-atom))
-            (reset! pages-for-second-pass-atom #{}))
-          (do (Thread/sleep 1000) (recur (inc pagenum) (grab-resource state (inc pagenum)))))))))
+          (if (last-page? full-page)
+            (do
+              (println (str "Finished with " state))
+              (println "Found " (count @pages-for-second-pass-atom) " lawyers")
+              (println "Recording lawyer data...")
+              (doall (map detail-page @pages-for-second-pass-atom))
+              (reset! pages-for-second-pass-atom #{}))
+            (do (Thread/sleep 1000) (recur (inc pagenum) (grab-resource state (inc pagenum)))))))
+    (catch Exception e (println "Error: " (.getMessage e))))))
 
 
 
