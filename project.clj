@@ -1,6 +1,6 @@
-(defproject crawl "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+(defproject crawl "1.0"
+  :description "Scrapes personal injury lawyer data from Cornell's lawyer database."
+  :url "https://github.com/RGrun/lawyer-crawl"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
