@@ -1,4 +1,4 @@
-# lawyer-crawl
+# lawyer-crawl-clojure
 
 Scrapes personal injury lawyer data from Cornell's lawyer listings site.
 
